@@ -1,0 +1,200 @@
+---
+title: "Gibsov metod biranja uzorka - Gibbs sampling"
+output:
+  html_document: default
+  html_notebook: default
+---
+***
+
+**Gibsov metod biranja uzorka je jedan od MCMC metoda biranja uzorka iz aposteriorne raspodele.**
+
+**MCMC** (Markov chain Monte Carlo) metod biranja uzorka obezbeðuje biranje uzorka iz
+višedimenzionih gustina raspodela, razlažuæi ih na raspodele manjih dimenzija sa kojima je
+lakše raditi. Deo imena „Monte Carlo", navedenog metoda, ukazuje na proces sluèajne
+simulacije, dok deo imena „Markov chain" ukazuje da se element uzorka iz aposteriorne
+raspodele bira na osnovu prethodno izabranog elementa. 
+
+Gibsov metod podrazumeva biranje uzorka iz uslovne raspodele za svaki parametar posebno, uzimajuæi u obzir tekuæe vrednosti svih ostalih parametara. 
+
+Multivarijaciona = više parametra raspodele.
+
+Gibsov metod je najèešæe korišæen MCMC metod u Bajesovoj statistici i opisan je na sledeæi naèin: 
+
+1. Dodeli $X^i_j$ neku vrednost $P$, gde je $i = 0$, $j = 0...k$
+2. $i=i+1$
+3. za svako $i$ manje od $n$
+   izaberi \[ X^{(i)}_j \sim f(X^{(i)}_j | X^{(i)}_0,..., X^{(i)}_{j-1} ~,X^{(i-1)}_{j+1},...,X^{(i-1)}_k) \]
+
+Ovo je opšta ideja.
+
+****
+#### Pseudokod za biranje uzoraka iz dvodimenzionih gustina raspodela:
+****
+
+Ulaz: neophodni parametri za raèunanje uslovnih verovatnoæa <br/>
+Izlaz: niz taèaka koje su uzorci aposteriorne raspodele <br/>
+  *inicijalizacija* $X^{(1)} = P$ <br/>
+  $i = 2$ <br/>
+  *za svako i manje od n radi:* <br/>
+  $Y^{(i)} \sim f(Y^{(i)} | X^{(i-1)})$ <br/>
+  $X^{(i)} \sim f(X^{(i)} | Y^{(i)})$ <br/>
+  *izbriši (eng. "burn-in") poèetnih S uzoraka u X i Y* <br/>
+  *iscrtaj željene grafièke prikaze* <br/>
+
+
+Ukoliko bismo imali raspodelu sa više od dva parametra, algoritam bi bio vrlo slièan.
+
+****
+#### Pseudokod za biranje uzoraka iz višedimenzionih gustina raspodela:
+****
+
+Ulaz i izlaz isti kao i kod prethodnog algoritma.
+<br/>
+*Inicijalizuj* $X^{(1)}_k = P$, za $k = 1...j$ <br/>
+$i = 2$<br/>
+Za svako $i$ manje od $n$ radi:<br/>
+	$X^{(i)}_1 \sim f(X^{(i)}_1| X^{(i-1)}_2, X^{(i-1)}_3,...,X^{(i-1)}_j)$<br/>
+	$X^{(i)}_2 = f(X^{(i)}_2| X^{(i-1)}_1, X^{(i-1)}_3,...,X^{(i-1)}_j)$<br/>
+	.<br/>
+	.<br/>
+	$X^{(i)}_j = f(X^{(i)}_j| X^{(i-1)}_1, X^{(i-1)}_2,...,X^{(i-1)}_{j-1})$<br/>
+<br/>
+izbrisi poèetnih $S$ uzoraka od $X_1...X_s$<br/>
+iscrtaj željene grafièke prikaze<br/>
+
+****
+#### Primeri:
+****
+1. Neka $\theta \sim N_2(0,\Sigma)$. Naæi aposteriornu ocenu parametra. Napomenimo da je 
+\[
+\Sigma = \left(\begin{array}{cc} 
+1 & \rho\\
+\rho & 1
+\end{array}\right)
+\]
+matrica kovarijacije.
+
+uslovne raspodele parametra $\theta_1$ i $\theta_2$ su:
+\[ \theta_1|\theta_2 \sim N(\rho*\theta_2, 1-\rho^2) 
+\]
+\[i
+\]
+\[
+  \theta_2|\theta_1 \sim N(\rho*\theta_1, 1-\rho^2)
+\]
+
+
+
+
+```{r echo=TRUE}
+#inicijalizacija parametara uslovnih raspodela
+ro <- 0.6
+#S - koliko prvih elemenata odbacujemo
+S <- 3000
+#inic niza
+teta1 <- teta2 <- rep(NA, 10000)
+# incijalizacija pocetka (ne preterano bitna zbog prirode algoritma)
+teta2[1] <- teta[1] <- 1;
+
+for(i in 2:10000){
+  #uslovna f(teta1|teta2)
+  teta1[i] <- rnorm(n = 1, mean = ro * teta2[i - 1], sd = 1 - ro * ro)
+  #uslovna f(teta2|teta1)
+  teta2[i] <- rnorm(n = 1, mean = ro * teta1[i], sd = 1 - ro * ro)
+  #stampanje napretka
+}
+# odbacivanje pocetka
+teta1 <- teta1[-(1:S)]
+teta2 <- teta2[-(1:S)]
+
+mean(teta1)
+mean(teta2)
+
+hist(teta1)
+hist(teta2)
+
+plot(teta1, teta2)
+```
+
+
+2. Neka $X \sim N(\mu, \frac{1}{\tau})$. Naæi aposteriornu ocenu parametra $\mu$ i $\tau$.
+
+uslovne raspodele parametra $\mu$ i $\tau$ su:
+\[
+  \mu|\tau \sim N(\bar{x}, \frac{1}{n\tau})
+\]
+\[
+i
+\]
+\[
+  \tau|\mu \sim \gamma(\frac{n}{2},\frac{2}{(n-1)\sigma^2 + n(\mu-xs)^2})
+\]
+
+```{r echo=TRUE}
+# statistike uzorka
+# velicina uzorka
+n <- 30
+# oèekivana srednja vrednost uzorka
+xs <- 15
+# oèekivana disperzija uzorka
+s2 <- 3
+
+#inicijalizacija nizova
+mu <- tau <- rep(NA, 10000)
+# pocetni deo koji odbacujemo
+S <- 3000
+# incijalizacija
+tau[1] <- 1
+for(i in 2:10000) {
+  #racunanje uslovne raspodele f(mu|tau)
+  mu[i] <- rnorm(n = 1, mean = xs, sd = sqrt(1 / (n * tau[i - 1])))
+  #f(tau|mu)
+  tau[i] <- rgamma(n = 1, shape = n / 2, scale = 2 / ((n - 1) * s2 + n * (mu[i] - xs)^2))
+}
+# odbacivanje pocetaka
+mu <- mu[-(1:S)]
+tau <- tau[-(1:S)]
+
+mean(mu)
+mean(tau)
+
+hist(mu)
+hist(tau)
+
+plot(mu, tau)
+```
+
+
+
+****
+#### Primene
+****
+
+
+Algoritam generalno ne zavisi od problema i može se primenjivati kad god imamo složene raspodele iz kojih je teško uzorkovati, a najèešæe primene su: <br/>
+1. Mašinsko uèenje  - odreðivanje raspodele radi predviðanja reèi u tekstu jedna je od osnovnih primena, a one su u ovom polju veoma široke. <br/>
+2. Medicina – nalaženje verovatnoæe (greške prve vrste) kod medicinskih testova. <br/>
+3. Bioinformatika  - analiza genoma, biklasterovanje i nalaženje motiva u DNK i RNK danas su obeæavajuæe oblasti zahvaljujuæi ovom algoritmu. <br/>
+4. Analiza podataka u prehrambrenoj industriji, trgovini nekretninama i naravno ekonomiji. <br/>
+
+****
+#### Mane
+****
+
+
+Iako moæan, Gibsov algoritam ima 2 poznata sluèaja u kojima daje nepotpune rezultate: <br/>
+1. Ukoliko su dva elementa vektora verovatnoæa savršeno korelisani ili anti-korelisani ementi, Gibsov algoritam biæe zaglavljen i neæe moæi da ih promeni. <br/>
+2. Ukoliko postoji sitno ostrvo stanja sa velikom verovatnoæom nasuprot veæini ostalih sa zanemarljivim ili jako malim verovatnoæama, algoritam æe izrazito dugo vraæati stanja samo sa malom verovatnoæom, pa zatim opet dugo sa velikom verovatnoæom i biæe mu potrebno oko $2^100$ iteracija da bi ispravno ocenio raspodelu.
+
+****
+#### Literatura
+****
+
+*OCENJIVANJE PARAMETARA – BAJESOVSKI PRISTUP, Master rad, Sofija Suvoèarev, br. indeksa 1090/2010, Matematièki fakultet, str. 52-53, poglavlje 5.3 MCMC metod biranja uzorka.* <br/>
+*Introduction to Mathematical Statistics, 6th edition, Hogg, McKean, Craig, poglavlje 11.4 Gibbs sampler*
+
+****
+
+Podatke objedinili za potrebe kursa Statitika na I smeru: <br/>
+Nikola Mandiæ 291/2015 <br/>
+Aleksandar Jakovljeviæ 156/2015 <br/>
