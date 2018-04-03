@@ -9,44 +9,44 @@ output:
 
 **Gibsov metod biranja uzorka je jedan od MCMC metoda biranja uzorka iz aposteriorne raspodele.**
 
-**MCMC** (Markov chain Monte Carlo) metod biranja uzorka obezbe?uje biranje uzorka iz
-vi?edimenzionih gustina raspodela, razla?u?i ih na raspodele manjih dimenzija sa kojima je
-lak?e raditi. Deo imena ?Monte Carlo", navedenog metoda, ukazuje na proces slu?ajne
-simulacije, dok deo imena ?Markov chain" ukazuje da se element uzorka iz aposteriorne
+**MCMC** (Markov chain Monte Carlo) metod biranja uzorka obezbeđuje biranje uzorka iz
+višedimenzionih gustina raspodela, razlažući ih na raspodele manjih dimenzija sa kojima je
+lakše raditi. Deo imena "Monte Carlo", navedenog metoda, ukazuje na proces slučajne
+simulacije, dok deo imena "Markov chain" ukazuje da se element uzorka iz aposteriorne
 raspodele bira na osnovu prethodno izabranog elementa. 
 
-Gibsov metod podrazumeva biranje uzorka iz uslovne raspodele za svaki parametar posebno, uzimaju?i u obzir teku?e vrednosti svih ostalih parametara. 
+Gibsov metod podrazumeva biranje uzorka iz uslovne raspodele za svaki parametar posebno, uzimajući u obzir tekuće vrednosti svih ostalih parametara. 
 
-Multivarijaciona = vi?e parametra raspodele.
+Multivarijaciona = više parametra raspodele.
 
-Gibsov metod je naj?e??e kori??en MCMC metod u Bajesovoj statistici i opisan je na slede?i na?in: 
+Gibsov metod je najčešće korišćen MCMC metod u Bajesovoj statistici i opisan je na sledeći način: 
 
 1. Dodeli $X^i_j$ neku vrednost $P$, gde je $i = 0$, $j = 0...k$
 2. $i=i+1$
 3. za svako $i$ manje od $n$
    izaberi \[ X^{(i)}_j \sim f(X^{(i)}_j | X^{(i)}_0,..., X^{(i)}_{j-1} ~,X^{(i-1)}_{j+1},...,X^{(i-1)}_k) \]
 
-Ovo je op?ta ideja.
+Ovo je opšta ideja.
 
 ****
 #### Pseudokod za biranje uzoraka iz dvodimenzionih gustina raspodela:
 ****
 
-Ulaz: neophodni parametri za ra?unanje uslovnih verovatno?a <br/>
-Izlaz: niz ta?aka koje su uzorci aposteriorne raspodele <br/>
+Ulaz: neophodni parametri za računanje uslovnih verovatnoća <br/>
+Izlaz: niz tačaka koje su uzorci aposteriorne raspodele <br/>
   *inicijalizacija* $X^{(1)} = P$ <br/>
   $i = 2$ <br/>
   *za svako i manje od n radi:* <br/>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$Y^{(i)} \sim f(Y^{(i)} | X^{(i-1)})$ <br/>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$X^{(i)} \sim f(X^{(i)} | Y^{(i)})$ <br/>
-  *izbri?i (eng. "burn-in") po?etnih S uzoraka u X i Y* <br/>
-  *iscrtaj ?eljene grafi?ke prikaze* <br/>
+  *izbriši (eng. "burn-in") početnih S uzoraka u X i Y* <br/>
+  *iscrtaj željene grafičke prikaze* <br/>
 
 
-Ukoliko bismo imali raspodelu sa vi?e od dva parametra, algoritam bi bio vrlo sli?an.
+Ukoliko bismo imali raspodelu sa više od dva parametra, algoritam bi bio vrlo sličan.
 
 ****
-#### Pseudokod za biranje uzoraka iz vi?edimenzionih gustina raspodela:
+#### Pseudokod za biranje uzoraka iz višedimenzionih gustina raspodela:
 ****
 
 Ulaz i izlaz isti kao i kod prethodnog algoritma.
@@ -60,13 +60,13 @@ Za svako $i$ manje od $n$ radi:<br/>
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<br/>
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$X^{(i)}_j = f(X^{(i)}_j| X^{(i)}_1, X^{(i)}_2,...,X^{(i)}_{j-1})$<br/>
 <br/>
-izbrisi po?etnih $S$ uzoraka od $X_1...X_s$<br/>
-iscrtaj ?eljene grafi?ke prikaze<br/>
+izbrisi početnih $S$ uzoraka od $X_1...X_s$<br/>
+iscrtaj željene grafičke prikaze<br/>
 
 ****
 #### Primeri:
 ****
-1. Neka $\theta \sim N_2(0,\Sigma)$. Na?i aposteriornu ocenu parametra. Napomenimo da je 
+1. Neka $\theta \sim N_2(0,\Sigma)$. Naći aposteriornu ocenu parametra. Napomenimo da je 
 \[
 \Sigma = \left(\begin{array}{cc} 
 1 & \rho\\
@@ -118,26 +118,24 @@ plot(teta1, teta2)
 ```
 
 
-2. Neka $X \sim N(\mu, \frac{1}{\tau})$. Na?i aposteriornu ocenu parametra $\mu$ i $\tau$.
-
-uslovne raspodele parametra $\mu$ i $\tau$ su:
+2. Neka $X \sim N(\mu, \frac{1}{\tau})$. Naći aposteriornu ocenu parametra $\mu$ i $\tau$ ako su poznate uslovne raspodele parametra $\mu$ i $\tau$ i ako je data veličina uzorka n:
 \[
-  \mu|\tau \sim N(\bar{x}, \frac{1}{n\tau})
+  \mu|\tau, n  \sim N(\bar{x}, \frac{1}{n\tau})
 \]
 \[
 i
 \]
 \[
-  \tau|\mu \sim \gamma(\frac{n}{2},\frac{2}{(n-1)\sigma^2 + n(\mu-xs)^2})
+  \tau|\mu, n \sim \gamma(\frac{n}{2},\frac{2}{(n-1)\sigma^2 + n(\mu-xs)^2})
 \]
 
 ```{r echo=TRUE}
 # statistike uzorka
 # velicina uzorka
 n <- 30
-# o?ekivana srednja vrednost uzorka
+# uzoracka sredina
 xs <- 15
-# o?ekivana disperzija uzorka
+# uzoracka disperzija
 s2 <- 3
 
 #inicijalizacija nizova
@@ -172,10 +170,10 @@ plot(mu, tau)
 ****
 
 
-Algoritam generalno ne zavisi od problema i mo?e se primenjivati kad god imamo slo?ene raspodele iz kojih je te?ko uzorkovati, a naj?e??e primene su: <br/>
-1. Ma?insko u?enje  - odre?ivanje raspodele radi predvi?anja re?i u tekstu jedna je od osnovnih primena, a one su u ovom polju veoma ?iroke. <br/>
-2. Medicina ? nala?enje verovatno?e (gre?ke prve vrste) kod medicinskih testova. <br/>
-3. Bioinformatika  - analiza genoma, biklasterovanje i nala?enje motiva u DNK i RNK danas su obe?avaju?e oblasti zahvaljuju?i ovom algoritmu. <br/>
+Algoritam generalno ne zavisi od problema i može se primenjivati kad god imamo složene raspodele iz kojih je teško uzorkovati, a najčešće primene su: <br/>
+1. Mašinsko učenje  - određivanje raspodele radi predviđanja reči u tekstu jedna je od osnovnih primena, a one su u ovom polju veoma široke. <br/>
+2. Medicina - nalaženje verovatnoće (greške prve vrste) kod medicinskih testova. <br/>
+3. Bioinformatika  - analiza genoma, biklasterovanje i nalaženje motiva u DNK i RNK danas su obećavajuće oblasti zahvaljujući ovom algoritmu. <br/>
 4. Analiza podataka u prehrambrenoj industriji, trgovini nekretninama i naravno ekonomiji. <br/>
 
 ****
@@ -183,19 +181,19 @@ Algoritam generalno ne zavisi od problema i mo?e se primenjivati kad god imamo s
 ****
 
 
-Iako mo?an, Gibsov algoritam ima 2 poznata slu?aja u kojima daje nepotpune rezultate: <br/>
-1. Ukoliko su dva elementa vektora verovatno?a savr?eno korelisani ili anti-korelisani ementi, Gibsov algoritam bi?e zaglavljen i ne?e mo?i da ih promeni. <br/>
-2. Ukoliko postoji sitno ostrvo stanja sa velikom verovatno?om nasuprot ve?ini ostalih sa zanemarljivim ili jako malim verovatno?ama, algoritam ?e izrazito dugo vra?ati stanja samo sa malom verovatno?om, pa zatim opet dugo sa velikom verovatno?om i bi?e mu potrebno oko $2^100$ iteracija da bi ispravno ocenio raspodelu.
+Iako moćan, Gibsov algoritam ima 2 poznata slučaja u kojima daje nepotpune rezultate: <br/>
+1. Ukoliko su dva elementa vektora verovatnoća savršeno korelisani ili anti-korelisani elementi, Gibsov algoritam biće zaglavljen i neće moći da ih promeni. <br/>
+2. Ukoliko postoji sitno ostrvo stanja sa velikom verovatnoćom nasuprot većini ostalih sa zanemarljivim ili jako malim verovatnoćama, algoritam će izrazito dugo vraćati stanja samo sa malom verovatnoćom, pa zatim opet dugo sa velikom verovatnoćom i biće mu potrebno oko $2^100$ iteracija da bi ispravno ocenio raspodelu.
 
 ****
 #### Literatura
 ****
 
-*OCENJIVANJE PARAMETARA ? BAJESOVSKI PRISTUP, Master rad, Sofija Suvo?arev, br. indeksa 1090/2010, Matemati?ki fakultet, str. 52-53, poglavlje 5.3 MCMC metod biranja uzorka.* <br/>
-*Introduction to Mathematical Statistics, 6th edition, Hogg, McKean, Craig, poglavlje 11.4 Gibbs sampler*
+*OCENJIVANJE PARAMETARA - BAJESOVSKI PRISTUP, Master rad, Sofija Suvočarev, br. indeksa 1090/2010, Matematički fakultet, str. 52-53, poglavlje 5.3 MCMC metod biranja uzorka.* <br/>
+*Introduction to Mathematical Statistics, 6th edition, Hogg, McKean, Craig, poglavlje 11.4 Gibbs sampler, strana 600-607.*
 
 ****
 
 Podatke objedinili za potrebe kursa Statitika na I smeru: <br/>
-Nikola Mandi? 291/2015 <br/>
-Aleksandar Jakovljevi? 156/2015 <br/>
+Nikola Mandić 291/2015 <br/>
+Aleksandar Jakovljević 156/2015 <br/>
